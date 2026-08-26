@@ -1,0 +1,27 @@
+name: Deployment
+
+on:
+  push:
+    branches: main
+
+jobs:
+  dev:
+    runs-on: ubuntu-latest
+    name: Deploy to dev
+    steps:
+      - uses: actions/checkout@v7
+      - run: echo "Deploying to dev"
+  staging:
+    runs-on: ubuntu-latest
+    name: Deploy to staging
+    needs: dev
+    steps:
+      - uses: actions/checkout@v7
+      - run: echo "Deploying to staging"
+  prod:
+    runs-on: ubuntu-latest
+    name: Deploy to prod
+    needs: staging
+    steps:
+      - uses: actions/checkout@v7
+      - run: echo "Deploying to prod"
