@@ -14,11 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy to dev
     environment: dev
+    defaults:
+      run:
+        working-directory: envs/dev
+    env:
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
     steps:
       - uses: actions/checkout@v7
-      - name: Show environment name
-        run: |
-          echo "Environment: ${{ vars.ENV_NAME }}"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.15.9"
+          terraform_wrapper: false
       
       - name: Azure login
         uses: azure/login@v3
@@ -26,26 +37,86 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Confirm identity
-        run: az account show
+      
+      - name: Terraform initialization
+        run: terraform init -input=false
+      
+      - name: Terraform apply
+        run: terraform apply -auto-approve -input=false
+      
+      - name: Show app URL
+        run: terraform output -raw app_url
+      
   staging:
     runs-on: ubuntu-latest
     name: Deploy to staging
     environment: staging
     needs: dev
+    defaults:
+      run:
+        working-directory: envs/staging
+    env:
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
     steps:
       - uses: actions/checkout@v7
-      - name: Show environment name
-        run: | 
-          echo "Environment: ${{ vars.ENV_NAME }}"
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.15.9"
+          terraform_wrapper: false
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform initialization
+        run: terraform init -input=false
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve -input=false
+
+      - name: Show app URL
+        run: terraform output -raw app_url
+  
   prod:
     runs-on: ubuntu-latest
     name: Deploy to prod
     environment: prod
     needs: staging
+    defaults:
+      run:
+        working-directory: envs/prod
+    env:
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
     steps:
       - uses: actions/checkout@v7
-      - name: Show environment name
-        run: |
-          echo "Environment: ${{ vars.ENV_NAME }}"
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.15.9"
+          terraform_wrapper: false
+
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform initialization
+        run: terraform init -input=false
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve -input=false
+
+      - name: Show app URL
+        run: terraform output -raw app_url
