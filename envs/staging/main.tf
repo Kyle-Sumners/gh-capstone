@@ -1,7 +1,7 @@
 module "webapp" {
   source = "../../modules/webapp"
 
-  environment     = "dev"
+  environment     = "staging"
   app_name_suffix = "ks"
 }
 
