@@ -4,6 +4,10 @@ on:
   pull_request:
     branches: main
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   first-job:
     name: validation
@@ -16,3 +20,13 @@ jobs:
           echo "Branch: ${{ github.head_ref }}"
           echo "PR number: ${{ github.event.number }}"
           echo "Commit SHA: ${{ github.sha }}"
+        
+      - name: Azure login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Confirm identity
+        run: az account show
