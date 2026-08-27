@@ -44,6 +44,23 @@ jobs:
       - name: Terraform apply
         run: terraform apply -auto-approve -input=false
       
+      - name: Capture Terraform outputs
+        id: tf
+        run: |
+          echo "rg=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+          echo "app=$(terraform output -raw web_app_name)" >> $GITHUB_OUTPUT
+
+      - name: Package app
+        run: cd "$GITHUB_WORKSPACE/app" && zip -r "$GITHUB_WORKSPACE/app.zip" .
+
+      - name: Deploy app content
+        run: |
+          az webapp deploy \
+            --resource-group "${{ steps.tf.outputs.rg }}" \
+            --name "${{ steps.tf.outputs.app }}" \
+            --src-path "$GITHUB_WORKSPACE/app.zip" \
+            --type zip
+
       - name: Show app URL
         run: terraform output -raw app_url
       
@@ -81,6 +98,23 @@ jobs:
       - name: Terraform apply
         run: terraform apply -auto-approve -input=false
 
+      - name: Capture Terraform outputs
+        id: tf
+        run: |
+          echo "rg=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+          echo "app=$(terraform output -raw web_app_name)" >> $GITHUB_OUTPUT
+
+      - name: Package app
+        run: cd "$GITHUB_WORKSPACE/app" && zip -r "$GITHUB_WORKSPACE/app.zip" .
+
+      - name: Deploy app content
+        run: |
+          az webapp deploy \
+            --resource-group "${{ steps.tf.outputs.rg }}" \
+            --name "${{ steps.tf.outputs.app }}" \
+            --src-path "$GITHUB_WORKSPACE/app.zip" \
+            --type zip
+
       - name: Show app URL
         run: terraform output -raw app_url
   
@@ -117,6 +151,23 @@ jobs:
 
       - name: Terraform apply
         run: terraform apply -auto-approve -input=false
+      
+      - name: Capture Terraform outputs
+        id: tf
+        run: |
+          echo "rg=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+          echo "app=$(terraform output -raw web_app_name)" >> $GITHUB_OUTPUT
+
+      - name: Package app
+        run: cd "$GITHUB_WORKSPACE/app" && zip -r "$GITHUB_WORKSPACE/app.zip" .
+
+      - name: Deploy app content
+        run: |
+          az webapp deploy \
+            --resource-group "${{ steps.tf.outputs.rg }}" \
+            --name "${{ steps.tf.outputs.app }}" \
+            --src-path "$GITHUB_WORKSPACE/app.zip" \
+            --type zip
 
       - name: Show app URL
         run: terraform output -raw app_url
