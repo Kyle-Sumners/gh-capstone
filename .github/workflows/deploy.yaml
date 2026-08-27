@@ -4,24 +4,36 @@ on:
   push:
     branches: main
 
+permissions:
+  contents: read
+
 jobs:
   dev:
     runs-on: ubuntu-latest
     name: Deploy to dev
+    environment: dev
     steps:
       - uses: actions/checkout@v7
-      - run: echo "Deploying to dev"
+      - name: Show environment name
+        run: |
+          echo "Environment: ${{ vars.ENV_NAME }}"
   staging:
     runs-on: ubuntu-latest
     name: Deploy to staging
+    environment: staging
     needs: dev
     steps:
       - uses: actions/checkout@v7
-      - run: echo "Deploying to staging"
+      - name: Show environment name
+        run: | 
+          echo "Environment: ${{ vars.ENV_NAME }}"
   prod:
     runs-on: ubuntu-latest
     name: Deploy to prod
+    environment: prod
     needs: staging
     steps:
       - uses: actions/checkout@v7
-      - run: echo "Deploying to prod"
+      - name: Show environment name
+        run: |
+          echo "Environment: ${{ vars.ENV_NAME }}"
