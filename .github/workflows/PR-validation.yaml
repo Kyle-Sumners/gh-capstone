@@ -2,25 +2,41 @@ name: Validate
 
 on:
   pull_request:
-    branches: main
+    branches: [main]
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  first-job:
-    name: validation
+  validate:
+    name: Validate ${{ matrix.env }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [dev, staging, prod]
+      
+    defaults:
+      run:
+        working-directory: envs/${{ matrix.env }}
+
+    env:
+      ARM_USE_OIDC: true
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-      - name: Debug messages
-        run: |
-          echo "Branch: ${{ github.head_ref }}"
-          echo "PR number: ${{ github.event.number }}"
-          echo "Commit SHA: ${{ github.sha }}"
-        
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with: 
+          terraform_version: "1.15.9"
+          terraform_wrapper: false
+      
       - name: Azure login
         uses: azure/login@v3
         with:
@@ -28,5 +44,31 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       
-      - name: Confirm identity
-        run: az account show
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+        working-directory: .
+      
+      - name: Terraform initialization
+        run: terraform init -input=false
+      
+      - name: Terraform validation
+        run: terraform validate -no-color
+      
+      - name: Terraform plan
+        id: plan
+        continue-on-error: true
+        run: |
+          terraform plan -no-color -input=false -out=tfplan
+          terraform show -no-color tfplan > plan.txt
+      
+      - name: Upload plan
+        if: steps.plan.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ matrix.env }}
+          path: envs/${{ matrix.env }}/tfplan
+          retention-days: 5
+      
+      - name: Check plan failure
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
