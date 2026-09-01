@@ -63,6 +63,11 @@ jobs:
 
       - name: Show app URL
         run: terraform output -raw app_url
+
+      - name: Test URL
+        run: |
+            URL=${terraform output -raw app_url}
+            curl --fail --silent --show-error --retry 5 --retry-delay 5 "$URL" | grep -q "<h1>"
       
   staging:
     runs-on: ubuntu-latest
@@ -117,6 +122,11 @@ jobs:
 
       - name: Show app URL
         run: terraform output -raw app_url
+      
+      - name: Test URL
+        run: |
+            URL=${terraform output -raw app_url}
+            curl --fail --silent --show-error --retry 5 --retry-delay 5 "$URL" | grep -q "<h1>"
   
   prod:
     runs-on: ubuntu-latest
@@ -171,3 +181,8 @@ jobs:
 
       - name: Show app URL
         run: terraform output -raw app_url
+      
+      - name: Test URL
+        run: |
+            URL=${terraform output -raw app_url}
+            curl --fail --silent --show-error --retry 5 --retry-delay 5 "$URL" | grep -q "<h1>"
