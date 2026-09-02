@@ -1,6 +1,12 @@
 resource "azurerm_resource_group" "this" {
   name     = "rg-quoteportal-${var.environment}-${var.location_short}"
   location = var.location
+
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+  }
+
 }
 
 resource "azurerm_service_plan" "this" {
